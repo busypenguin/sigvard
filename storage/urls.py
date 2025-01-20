@@ -8,4 +8,5 @@ urlpatterns = [
     path("faq/", views.faq, name="faq"),
     path("my-rent/", views.my_rent, name="my_rent"),
     path("register/", views.UserRegisterView.as_view(), name="register"),
+    path("login/", views.UserLoginView.as_view(), name="login"),
 ]

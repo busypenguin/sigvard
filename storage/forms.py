@@ -1,6 +1,9 @@
 from django import forms
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 class UserRegisterForm(UserCreationForm):
@@ -47,3 +50,58 @@ class UserRegisterForm(UserCreationForm):
                 "autocomplete": "off",
             }
         )
+
+
+class UserLoginForm(AuthenticationForm):
+    """
+    Форма авторизации на сайте через email
+    """
+
+    username = forms.EmailField(
+        label="E-mail",
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "E-mail",
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "autocomplete": "off",
+            }
+        ),
+    )
+
+    password = forms.CharField(
+        label="Пароль",
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Пароль",
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "autocomplete": "off",
+            }
+        ),
+    )
+
+    error_messages = {
+        "invalid_login": "Введен некорректный email или пароль.",
+        "inactive": "Этот аккаунт неактивен.",
+    }
+
+    def clean(self):
+        """
+        Проверяем данные и аутентифицируем пользователя через email
+        """
+        email = self.cleaned_data.get("username")
+        password = self.cleaned_data.get("password")
+
+        if email and password:
+            self.user_cache = authenticate(
+                self.request, username=email, password=password
+            )
+            if self.user_cache is None:
+                raise ValidationError(
+                    self.error_messages["invalid_login"],
+                    code="invalid_login",
+                )
+            else:
+                self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data
