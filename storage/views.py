@@ -1,4 +1,4 @@
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -54,6 +54,14 @@ class UserLoginView(SuccessMessageMixin, LoginView):
     def get_success_url(self):
         referer = self.request.META.get("HTTP_REFERER")
         return referer if referer else self.success_url
+
+
+class UserLogoutView(LogoutView):
+    """
+    Выход с сайта
+    """
+
+    next_page = reverse_lazy("main_page")
 
 
 def main_page(request: HttpRequest) -> HttpResponse:
