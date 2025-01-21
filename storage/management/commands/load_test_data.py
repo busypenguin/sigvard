@@ -54,9 +54,9 @@ class Command(BaseCommand):
                 for i in range(10):
                     level = random.randint(1, 4)
                     number = f"{num}{random.randint(100, 999)}-{level}{i}"
-                    height = random.uniform(2.0, 4.0)
-                    width = random.uniform(2.0, 5.0)
-                    length = random.uniform(1.0, 4.0)
+                    height = round(random.uniform(2.0, 4.0), 1)
+                    width = round(random.uniform(2.0, 5.0), 1)
+                    length = round(random.uniform(1.0, 4.0), 1)
                     price = random.randint(1000, 5000)
                     Box.objects.create(
                         number=number,
