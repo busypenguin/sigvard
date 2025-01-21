@@ -4,9 +4,9 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from .models import Storage
 
 from .forms import UserRegisterForm, UserLoginForm
+from .models import Storage
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -67,27 +67,18 @@ class UserLogoutView(LogoutView):
 
 def main_page(request: HttpRequest) -> HttpResponse:
     random_storage = Storage.objects.order_by("?").first()
-    context = {
-        "register_form": UserRegisterForm(),
-        "login_form": UserLoginForm(),
-        "storage": random_storage,
-    }
+    context = {"storage": random_storage}
     return render(request, "index.html", context)
 
 
 def boxes(request: HttpRequest) -> HttpResponse:
     storages = Storage.objects.all()
-    context = {
-        "register_form": UserRegisterForm(),
-        "login_form": UserLoginForm(),
-        "storages": storages,
-    }
+    context = {"storages": storages}
     return render(request, "boxes.html", context)
 
 
 def faq(request: HttpRequest) -> HttpResponse:
-    context = {"register_form": UserRegisterForm(), "login_form": UserLoginForm()}
-    return render(request, "faq.html", context)
+    return render(request, "faq.html")
 
 
 def my_rent(request: HttpRequest) -> HttpResponse:
