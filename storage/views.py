@@ -77,7 +77,11 @@ def main_page(request: HttpRequest) -> HttpResponse:
 
 def boxes(request: HttpRequest) -> HttpResponse:
     storages = Storage.objects.all()
-    context = {"storages": storages}
+    context = {
+        "register_form": UserRegisterForm(),
+        "login_form": UserLoginForm(),
+        "storages": storages,
+    }
     return render(request, "boxes.html", context)
 
 
