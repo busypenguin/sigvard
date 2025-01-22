@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import UserRegisterForm, UserLoginForm, RentForm
-from .models import Storage
+from .models import Storage, Rent
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -20,9 +20,18 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
     template_name = "index.html"
 
     def form_valid(self, form):
+        user = form.instance
         # Если username не заполнен, устанавливаем его равным части email до "@"
         if not form.cleaned_data.get("username"):
-            form.instance.username = form.cleaned_data.get("email").split("@")[0]
+            user.username = form.cleaned_data.get("email").split("@")[0]
+
+        # Связывает существующие заказы с указанным пользователем,
+        # если они были оформлены на email, использованный при регистрации.
+        user.save()
+        Rent.objects.filter(Q(email=user.email) & Q(user__isnull=True)).update(
+            user=user
+        )
+
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
