@@ -82,6 +82,18 @@ class Rent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
+    def save(self, *args, **kwargs):
+        # Если адрес указан, автоматически ставим флаг необходимости доставки
+        self.is_delivery_needed = True if self.pickup_address else False
+
+        # Расчет стоимости аренды
+        if self.start_date and self.end_date:
+            rental_days = (self.end_date - self.start_date).days + 1
+            daily_price = self.box.price
+            self.total_price = rental_days * daily_price
+
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Аренда"
         verbose_name_plural = "Аренды"
