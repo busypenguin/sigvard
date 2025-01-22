@@ -322,7 +322,7 @@
             </li>
         </ul>
         <div class="tab-content" id="pills-tabContent">
-            {% comment %} {% for box in boxes %} {% endcomment %}
+            {% for box in boxes %}
             <div class="tab-pane fade show active" id="pills-all" role="tabpanel"
                  aria-labelledby="pills-home-tab">
                 <a href="#"
@@ -331,19 +331,20 @@
 
                    class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
                     <div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-                        <span class="SelfStorage_green fs_24 me-2">1 эт.</span><span
-                            class="fs_24">№1389-11</span>
+                        <span class="SelfStorage_green fs_24 me-2">{{ box.level }} эт.</span><span
+                            class="fs_24">{{ box.number }}</span>
                     </div>
                     <div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-                        <span class="fs_24">2 м²</span>
+                        <span class="fs_24">{{ box.height}} м²</span>
                     </div>
                     <div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-                        <span class="fs_24">2 х 1 х 2.5 м²</span>
+                        <span class="fs_24">{{ box.width}} х {{ box.length}} х {{ box.height}} м²</span>
                     </div>
                     <div class="col-12 col-lg-3">
-                        <span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От 2264 ₽</span>
+                        <span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{ box.price}} ₽</span>
                     </div>
                 </a>
+<<<<<<< Updated upstream
                 <a href="#"
                    class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
                     <div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
@@ -501,7 +502,10 @@
                     </script>
                 </div>
             {% comment %} {%endfor%} {% endcomment %}
+=======
+>>>>>>> Stashed changes
             </div>
+            {%endfor%}
             <div class="tab-pane fade" id="pills-to3" role="tabpanel"
                  aria-labelledby="pills-profile-tab">
                 <a href="#"
