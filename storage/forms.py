@@ -26,21 +26,19 @@ class RentForm(forms.ModelForm):
         widget=forms.DateInput(
             attrs={
                 "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
-                "placeholder": "Дата начала аренды (YYYY-MM-DD)",
                 "type": "date",
             }
         ),
-        label="",
+        label="Дата начала аренды",
     )
     end_date = forms.DateField(
         widget=forms.DateInput(
             attrs={
                 "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
-                "placeholder": "Дата окончания аренды (YYYY-MM-DD)",
                 "type": "date",
             }
         ),
-        label="",
+        label="Дата окончания аренды",
     )
     pickup_address = forms.CharField(
         label="",
