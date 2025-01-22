@@ -1,12 +1,13 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Min, Max, Count, Q
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
-from .forms import UserRegisterForm, UserLoginForm
-from .models import Storage
+from .forms import UserRegisterForm, UserLoginForm, RentForm
+from .models import Storage, Rent, Box
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -19,9 +20,18 @@ class UserRegisterView(SuccessMessageMixin, CreateView):
     template_name = "index.html"
 
     def form_valid(self, form):
+        user = form.instance
         # Если username не заполнен, устанавливаем его равным части email до "@"
         if not form.cleaned_data.get("username"):
-            form.instance.username = form.cleaned_data.get("email").split("@")[0]
+            user.username = form.cleaned_data.get("email").split("@")[0]
+
+        # Связывает существующие заказы с указанным пользователем,
+        # если они были оформлены на email, использованный при регистрации.
+        user.save()
+        Rent.objects.filter(Q(email=user.email) & Q(user__isnull=True)).update(
+            user=user
+        )
+
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -67,13 +77,31 @@ class UserLogoutView(LogoutView):
 
 def main_page(request: HttpRequest) -> HttpResponse:
     random_storage = Storage.objects.order_by("?").first()
-    context = {"storage": random_storage}
+    storage_data = None
+    if random_storage:
+        storage_data = random_storage.boxes.aggregate(
+            total_boxes=Count("id"),
+            free_boxes=Count("id", filter=Q(is_occupied=False)),
+            min_price=Min("price"),
+            max_height=Max("height"),
+        )
+    context = {"storage": random_storage, "storage_data": storage_data}
     return render(request, "index.html", context)
 
 
 def boxes(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        rent_form = RentForm(request.POST)
+        if rent_form.is_valid():
+            rent_form.save()
+            return redirect("my_rent")
+    else:
+        rent_form = RentForm()
+
     storages = Storage.objects.all()
-    context = {"storages": storages}
+    boxes = Box.objects.all()
+    context = {"storages": storages, "rent_form": rent_form, "boxes": boxes}
+
     return render(request, "boxes.html", context)
 
 

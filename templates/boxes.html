@@ -322,9 +322,13 @@
             </li>
         </ul>
         <div class="tab-content" id="pills-tabContent">
+            {% comment %} {% for box in boxes %} {% endcomment %}
             <div class="tab-pane fade show active" id="pills-all" role="tabpanel"
                  aria-labelledby="pills-home-tab">
                 <a href="#"
+
+
+
                    class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
                     <div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
                         <span class="SelfStorage_green fs_24 me-2">1 эт.</span><span
@@ -496,6 +500,7 @@
                         document.getElementById('btn-collapse-all').addEventListener('click', () => document.getElementById('btn-collapse-all').classList.add('d-none'))
                     </script>
                 </div>
+            {% comment %} {%endfor%} {% endcomment %}
             </div>
             <div class="tab-pane fade" id="pills-to3" role="tabpanel"
                  aria-labelledby="pills-profile-tab">
