@@ -1,12 +1,12 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Min, Max, Count, Q
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
-from .forms import UserRegisterForm, UserLoginForm
-from django.db.models import Min, Max, Count, Q
+from .forms import UserRegisterForm, UserLoginForm, RentForm
 from .models import Storage
 
 
@@ -81,8 +81,17 @@ def main_page(request: HttpRequest) -> HttpResponse:
 
 
 def boxes(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        rent_form = RentForm(request.POST)
+        if rent_form.is_valid():
+            rent_form.save()
+            return redirect("my_rent")
+    else:
+        rent_form = RentForm()
+
     storages = Storage.objects.all()
-    context = {"storages": storages}
+    context = {"storages": storages, "rent_form": rent_form}
+
     return render(request, "boxes.html", context)
 
 
