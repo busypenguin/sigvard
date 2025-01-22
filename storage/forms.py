@@ -5,6 +5,68 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
+from .models import Rent, Box
+
+
+class RentForm(forms.ModelForm):
+    """
+    Форма аренды бокса.
+    """
+
+    email = forms.EmailField(
+        label="",
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "placeholder": "E-mail",
+            }
+        ),
+    )
+    start_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "placeholder": "Дата начала аренды (YYYY-MM-DD)",
+                "type": "date",
+            }
+        ),
+        label="",
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "placeholder": "Дата окончания аренды (YYYY-MM-DD)",
+                "type": "date",
+            }
+        ),
+        label="",
+    )
+    pickup_address = forms.CharField(
+        label="",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "placeholder": "Введите адрес, откуда нужно забрать груз",
+                "rows": 3,
+            }
+        ),
+    )
+    box = forms.ModelChoiceField(
+        label="",
+        queryset=Box.objects.filter(is_occupied=False),
+        widget=forms.Select(
+            attrs={
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+            }
+        ),
+    )
+
+    class Meta:
+        model = Rent
+        fields = ["email", "start_date", "end_date", "pickup_address", "box"]
+
 
 class UserRegisterForm(UserCreationForm):
     """
