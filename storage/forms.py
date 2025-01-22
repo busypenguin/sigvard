@@ -1,3 +1,5 @@
+from datetime import date
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -64,6 +66,26 @@ class RentForm(forms.ModelForm):
     class Meta:
         model = Rent
         fields = ["email", "start_date", "end_date", "pickup_address", "box"]
+
+    def clean(self):
+        """
+        Проверка корректности дат и их логики.
+        """
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get("start_date")
+        end_date = cleaned_data.get("end_date")
+
+        if start_date and end_date:
+            if start_date < date.today():
+                raise forms.ValidationError(
+                    "Дата начала аренды не может быть в прошлом."
+                )
+            if end_date <= start_date:
+                raise forms.ValidationError(
+                    "Дата окончания аренды должна быть позже даты начала."
+                )
+
+        return cleaned_data
 
 
 class UserRegisterForm(UserCreationForm):
