@@ -101,7 +101,6 @@ def boxes(request: HttpRequest) -> HttpResponse:
     storages = Storage.objects.all()
     boxes = Box.objects.all()
     context = {"storages": storages, "rent_form": rent_form, "boxes": boxes}
-
     return render(request, "boxes.html", context)
 
 
