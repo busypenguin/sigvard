@@ -10,9 +10,12 @@ class StorageAdmin(admin.ModelAdmin):
 
 @admin.register(Box)
 class BoxAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ("box",)
 
 
 @admin.register(Rent)
 class RentAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = ("total_price",)
+    raw_id_fields = ("user", "box")
+    autocomplete_fields = ["user", "box"]
+    list_filter = ["status"]
