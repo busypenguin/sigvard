@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import UserRegisterForm, UserLoginForm, RentForm
-from .models import Storage, Rent
+from .models import Storage, Rent, Box
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -99,8 +99,8 @@ def boxes(request: HttpRequest) -> HttpResponse:
         rent_form = RentForm()
 
     storages = Storage.objects.all()
-    context = {"storages": storages, "rent_form": rent_form}
-
+    boxes = Box.objects.all()
+    context = {"storages": storages, "rent_form": rent_form, "boxes": boxes}
     return render(request, "boxes.html", context)
 
 
