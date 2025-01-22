@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import UserRegisterForm, UserLoginForm
+from django.db.models import Min, Max, Count, Q
 from .models import Storage
 
 
@@ -67,7 +68,15 @@ class UserLogoutView(LogoutView):
 
 def main_page(request: HttpRequest) -> HttpResponse:
     random_storage = Storage.objects.order_by("?").first()
-    context = {"storage": random_storage}
+    storage_data = None
+    if random_storage:
+        storage_data = random_storage.boxes.aggregate(
+            total_boxes=Count("id"),
+            free_boxes=Count("id", filter=Q(is_occupied=False)),
+            min_price=Min("price"),
+            max_height=Max("height"),
+        )
+    context = {"storage": random_storage, "storage_data": storage_data}
     return render(request, "index.html", context)
 
 
