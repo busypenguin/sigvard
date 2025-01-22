@@ -53,8 +53,14 @@ class Rent(models.Model):
         ("expired", "Просрочена"),
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="rents", verbose_name="Арендатор"
+        User,
+        on_delete=models.CASCADE,
+        related_name="rents",
+        verbose_name="Арендатор",
+        null=True,
+        blank=True,
     )
+    email = models.EmailField(verbose_name="Email клиента", null=True, blank=True)
     box = models.ForeignKey(
         Box,
         on_delete=models.PROTECT,
@@ -92,6 +98,13 @@ class Rent(models.Model):
             daily_price = self.box.price
             self.total_price = rental_days * daily_price
 
+        # Если email указан, пробуем найти пользователя
+        if self.email and not self.user:
+            try:
+                self.user = User.objects.get(email=self.email)
+            except User.DoesNotExist:
+                pass  # Пользователь не найден, оставляем поле user пустым
+
         super().save(*args, **kwargs)
 
     class Meta:
@@ -99,4 +112,4 @@ class Rent(models.Model):
         verbose_name_plural = "Аренды"
 
     def __str__(self):
-        return f"Аренда бокса {self.box.number} пользователем {self.user.username}"
+        return f"Аренда бокса {self.box.number} пользователем {self.email}"
