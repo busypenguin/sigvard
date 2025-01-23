@@ -98,9 +98,27 @@ def boxes(request: HttpRequest) -> HttpResponse:
     else:
         rent_form = RentForm()
 
+    boxes_to3 = []
+    boxes_to10 = []
+    boxes_from10 = []
     storages = Storage.objects.all()
     boxes = Box.objects.all()
-    context = {"storages": storages, "rent_form": rent_form, "boxes": boxes}
+    for box in boxes:
+        if box.area < 3:
+            boxes_to3.append(box)
+        elif box.area < 10:
+            boxes_to10.append(box)
+        elif box.area > 10:
+            boxes_from10.append(box)
+
+    context = {
+        "storages": storages,
+        "rent_form": rent_form,
+        "boxes": boxes,
+        "boxes_to3": boxes_to3,
+        "boxes_to10": boxes_to10,
+        "boxes_from10": boxes_from10
+        }
     return render(request, "boxes.html", context)
 
 
