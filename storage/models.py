@@ -47,7 +47,7 @@ class Box(models.Model):
         return f"{self.storage.city}, №{self.number}"
 
     def save(self, *args, **kwargs):
-        self.area = self.width + self.length
+        self.area = self.width * self.length
         super().save(*args, **kwargs)
 
 
