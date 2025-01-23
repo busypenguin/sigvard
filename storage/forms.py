@@ -97,12 +97,14 @@ class RentForm(forms.ModelForm):
             subject, message = msg.create_confirm_rent_message(rent)
             send_email_message_task.delay(subject, message, rent.email)
 
+            task_ids = []
             # Запланировать задачу отправки письма в конце срока аренды
             subject, message = msg.create_end_rent_message(rent)
-            send_email_message_task.apply_async(
+            task = send_email_message_task.apply_async(
                 (subject, message, rent.email),
                 countdown=(rent.end_date - now()).total_seconds(),
             )
+            task_ids.append(task.id)
 
             # Запланировать задачи периодических напоминаний об окончании аренды
             delays = {30: "месяц", 14: "2 недели", 7: "неделю", 3: "3 дня"}
@@ -114,9 +116,13 @@ class RentForm(forms.ModelForm):
                     subject, message = msg.create_notif_end_rent_message(
                         rent, time_insert
                     )
-                    send_email_message_task.apply_async(
+                    task = send_email_message_task.apply_async(
                         (subject, message, rent.email), countdown=countdown
                     )
+                    task_ids.append(task.id)
+
+            rent.task_ids = task_ids
+            rent.save()
 
         return rent
 

@@ -15,7 +15,7 @@ class BoxAdmin(admin.ModelAdmin):
 
 @admin.register(Rent)
 class RentAdmin(admin.ModelAdmin):
-    readonly_fields = ("total_price",)
+    readonly_fields = ("total_price", "task_ids")
     raw_id_fields = ("user", "box")
     autocomplete_fields = ["user", "box"]
     list_filter = ["status"]

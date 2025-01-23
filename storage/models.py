@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
 
+from sigvard.celery import app
+
 
 class Storage(models.Model):
     photo = models.ImageField(upload_to="storage_images/", verbose_name="Фото")
@@ -85,6 +87,7 @@ class Rent(models.Model):
     is_partial_pickup_allowed = models.BooleanField(
         default=False, verbose_name="Можно забирать частично"
     )
+    task_ids = models.JSONField(default=list, verbose_name="ID задач напоминаний")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -104,6 +107,15 @@ class Rent(models.Model):
                 self.user = User.objects.get(email=self.email)
             except User.DoesNotExist:
                 pass  # Пользователь не найден, оставляем поле user пустым
+
+        if self.pk:
+            old_status = Rent.objects.get(pk=self.pk).status
+            new_status = self.status
+            # Удаляем связанные задачи если аренда завершена или отменена
+            if old_status != new_status and new_status in ["completed", "cancelled"]:
+                for task_id in self.task_ids:
+                    app.control.revoke(task_id, terminate=True)
+                self.task_ids = []
 
         super().save(*args, **kwargs)
 
