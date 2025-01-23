@@ -7,9 +7,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
 from .forms import UserRegisterForm, UserLoginForm, RentForm
-from .messages import create_confirm_rent_message
 from .models import Storage, Rent, Box
-from .tasks import send_email_message_task
 
 
 class UserRegisterView(SuccessMessageMixin, CreateView):
@@ -95,10 +93,7 @@ def boxes(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         rent_form = RentForm(request.POST)
         if rent_form.is_valid():
-            rent = rent_form.save()
-            # Создает письмо подтверждение аренды и отправляет пользователю
-            subject, message = create_confirm_rent_message(rent)
-            send_email_message_task.delay(subject, message, rent.email)
+            rent_form.save()
 
             return redirect("my_rent")
     else:
