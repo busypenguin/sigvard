@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django import forms
 from django.contrib.auth import authenticate
@@ -103,6 +103,20 @@ class RentForm(forms.ModelForm):
                 (subject, message, rent.email),
                 countdown=(rent.end_date - now()).total_seconds(),
             )
+
+            # Запланировать задачи периодических напоминаний об окончании аренды
+            delays = {30: "месяц", 14: "2 недели", 7: "неделю", 3: "3 дня"}
+            for delay, time_insert in delays.items():
+                countdown = (
+                        rent.end_date - timedelta(days=delay) - now()
+                ).total_seconds()
+                if countdown > 0:
+                    subject, message = msg.create_notif_end_rent_message(
+                        rent, time_insert
+                    )
+                    send_email_message_task.apply_async(
+                        (subject, message, rent.email), countdown=countdown
+                    )
 
         return rent
 
