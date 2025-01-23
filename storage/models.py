@@ -1,8 +1,12 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
 
+import storage.messages as msg
 from sigvard.celery import app
+from .tasks import send_email_message_task
 
 
 class Storage(models.Model):
@@ -92,32 +96,89 @@ class Rent(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
     def save(self, *args, **kwargs):
-        # Если адрес указан, автоматически ставим флаг необходимости доставки
+        is_new = self.pk is None
+        if is_new:
+            # Действия, выполняемые при создании записи
+            self.send_confirm_rent_message()
+
+            task_ids = []
+
+            end_rent_reminder_task_id = self.schedule_end_rent_reminders()
+            task_ids.append(end_rent_reminder_task_id)
+
+            rent_reminder_task_ids = self.schedule_rent_reminders()
+            task_ids.extend(rent_reminder_task_ids)
+
+            self.task_ids = task_ids
+        else:
+            # Действия, выполняемые при обновлении записи
+            self.remove_related_tasks()
+
+        self.set_delivery_flag()
+        self.calculate_rental_price()
+        self.link_user_by_email()
+
+        super().save(*args, **kwargs)
+
+    # Вспомогательные методы
+
+    def set_delivery_flag(self):
+        """Устанавливает флаг необходимости доставки, если указан адрес забора груза"""
         self.is_delivery_needed = True if self.pickup_address else False
 
-        # Расчет стоимости аренды
+    def calculate_rental_price(self):
+        """Рассчитывает стоимость аренды, если заданы даты"""
         if self.start_date and self.end_date:
             rental_days = (self.end_date - self.start_date).days + 1
             daily_price = self.box.price
             self.total_price = rental_days * daily_price
 
-        # Если email указан, пробуем найти пользователя
+    def link_user_by_email(self):
+        """Связывает аренду с пользователем, если указан email"""
         if self.email and not self.user:
             try:
                 self.user = User.objects.get(email=self.email)
             except User.DoesNotExist:
                 pass  # Пользователь не найден, оставляем поле user пустым
 
-        if self.pk:
-            old_status = Rent.objects.get(pk=self.pk).status
-            new_status = self.status
-            # Удаляем связанные задачи если аренда завершена или отменена
-            if old_status != new_status and new_status in ["completed", "cancelled"]:
-                for task_id in self.task_ids:
-                    app.control.revoke(task_id, terminate=True)
-                self.task_ids = []
+    def send_confirm_rent_message(self):
+        """Отправляет письмо подтверждение создания заказа аренды"""
+        subject, message = msg.create_confirm_rent_message(self)
+        send_email_message_task.delay(subject, message, self.email)
 
-        super().save(*args, **kwargs)
+    def schedule_end_rent_reminders(self):
+        """Запланировать задачу отправки письма в конце срока аренды"""
+        subject, message = msg.create_end_rent_message(self)
+        task = send_email_message_task.apply_async(
+            (subject, message, self.email),
+            countdown=(self.end_date - now()).total_seconds(),
+        )
+
+        return task.id
+
+    def schedule_rent_reminders(self) -> list:
+        """Запланировать задачи для периодических напоминаний об окончании аренды."""
+        delays = {30: "месяц", 14: "2 недели", 7: "неделю", 3: "3 дня"}
+        task_ids = []
+        for delay, time_insert in delays.items():
+            countdown = (self.end_date - timedelta(days=delay) - now()).total_seconds()
+            if countdown > 0:
+                subject, message = msg.create_notif_end_rent_message(self, time_insert)
+                task = send_email_message_task.apply_async(
+                    (subject, message, self.email), countdown=countdown
+                )
+                task_ids.append(task.id)
+
+        return task_ids
+
+    def remove_related_tasks(self):
+        """Удаляет связанные задачи, если аренда завершена или отменена"""
+        old_status = Rent.objects.get(pk=self.pk).status
+        new_status = self.status
+        if old_status != new_status and new_status in ["completed", "cancelled"]:
+            for task_id in self.task_ids:
+                app.control.revoke(task_id, terminate=True)
+            self.task_ids = []
 
     class Meta:
         verbose_name = "Аренда"
