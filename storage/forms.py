@@ -6,8 +6,11 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.utils.timezone import now
 
+from .messages import create_end_rent_message
 from .models import Rent, Box
+from .tasks import send_email_message_task
 
 
 class RentForm(forms.ModelForm):
@@ -86,6 +89,18 @@ class RentForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+    def save(self, commit=True):
+        rent = super().save(commit)
+        if commit:
+            # Запланировать задачу отправки письма в конце срока аренды
+            subject, message = create_end_rent_message(rent)
+            delay = (rent.end_date - now()).total_seconds()
+            send_email_message_task.apply_async(
+                (subject, message, rent.email), countdown=delay
+            )
+
+        return rent
 
 
 class UserRegisterForm(UserCreationForm):
