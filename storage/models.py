@@ -31,6 +31,9 @@ class Box(models.Model):
     height = models.FloatField(verbose_name="Высота, м.")
     width = models.FloatField(verbose_name="Ширина, м.")
     length = models.FloatField(verbose_name="Длина, м.")
+    area = models.DecimalField(
+        max_digits=3, decimal_places=1, verbose_name="Площадь, м²", default=0
+        )
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Цена", default=0
     )
@@ -42,6 +45,10 @@ class Box(models.Model):
 
     def __str__(self):
         return f"{self.storage.city}, №{self.number}"
+
+    def save(self, *args, **kwargs):
+        self.area = self.width + self.length
+        super().save(*args, **kwargs)
 
 
 class Rent(models.Model):
