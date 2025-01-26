@@ -94,6 +94,7 @@ def boxes(request: HttpRequest) -> HttpResponse:
         rent_form = RentForm(request.POST)
         if rent_form.is_valid():
             rent_form.save()
+
             return redirect("my_rent")
     else:
         rent_form = RentForm()
