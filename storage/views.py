@@ -1,7 +1,7 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Min, Max, Count, Q
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
@@ -121,6 +121,26 @@ def boxes(request: HttpRequest) -> HttpResponse:
         "boxes_from10": boxes_from10
         }
     return render(request, "boxes.html", context)
+
+
+def get_boxes(request: HttpRequest, storage_id: int) -> JsonResponse:
+    storage = Storage.objects.get(id=storage_id)
+    boxes = Box.objects.filter(storage=storage)
+    json_boxes = []
+    for box in boxes:
+        json_boxes.append(
+            {
+                "number": box.number,
+                "level": box.level,
+                "height": box.height,
+                "width": box.width,
+                "length": box.length,
+                "area": box.area,
+                "price": box.price,
+                "is_occupied": box.is_occupied
+            }
+        )
+    return JsonResponse({"boxes": json_boxes})
 
 
 def faq(request: HttpRequest) -> HttpResponse:
