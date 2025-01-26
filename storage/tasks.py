@@ -25,7 +25,7 @@ def send_monthly_email_reminder(rent_id, subject, message):
     Rent = apps.get_model("storage", "Rent")
     rent = Rent.objects.get(pk=rent_id)
 
-    next_run_time = datetime.now() + timedelta(minutes=1)
+    next_run_time = datetime.now() + timedelta(days=30)
     task = send_monthly_email_reminder.apply_async(
         (rent_id, subject, message), eta=next_run_time
     )
