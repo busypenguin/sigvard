@@ -6,7 +6,11 @@ from django.utils.timezone import now
 
 import storage.messages as msg
 from sigvard.celery import app
-from .tasks import send_email_message_task, send_monthly_email_reminder
+from .tasks import (
+    send_email_message_task,
+    send_monthly_email_reminder,
+    set_rent_status_to_expired_task,
+)
 
 
 class Storage(models.Model):
@@ -100,7 +104,7 @@ class Rent(models.Model):
         if is_new:
             # Действия, выполняемые при создании записи
             self.send_confirm_rent_message()
-            self.schedule_end_rent_reminders()
+            self.set_rent_status_to_expired()
             self.schedule_rent_reminders()
         else:
             # Действия, выполняемые при обновлении записи
@@ -138,11 +142,10 @@ class Rent(models.Model):
         subject, message = msg.create_confirm_rent_message(self)
         send_email_message_task.delay(subject, message, self.email)
 
-    def schedule_end_rent_reminders(self):
-        """Запланировать задачу отправки письма в конце срока аренды"""
-        subject, message = msg.create_end_rent_message(self)
-        task = send_email_message_task.apply_async(
-            (subject, message, self.email),
+    def set_rent_status_to_expired(self):
+        """Запланировать задачу изменить статус на 'просрочено' в конце срока аренды"""
+        task = set_rent_status_to_expired_task.apply_async(
+            (self.pk),
             countdown=(self.end_date - now()).total_seconds(),
         )
         self.task_ids.append(task.id)

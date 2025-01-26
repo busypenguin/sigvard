@@ -34,3 +34,15 @@ def send_monthly_email_reminder(rent_id, subject, message):
     rent.save()
 
     return send_email_message(subject, message, rent.email)
+
+
+@shared_task
+def set_rent_status_to_expired_task(rent_id):
+    """
+    Задача для изменения статуса на просрочено в конце срока аренды
+    """
+    Rent = apps.get_model("storage", "Rent")
+    rent = Rent.objects.get(pk=rent_id)
+
+    rent.status = "expired"
+    rent.save()
