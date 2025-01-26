@@ -6,7 +6,7 @@ from django.utils.timezone import now
 
 import storage.messages as msg
 from sigvard.celery import app
-from .tasks import send_email_message_task
+from .tasks import send_email_message_task, send_monthly_email_reminder
 
 
 class Storage(models.Model):
@@ -113,6 +113,7 @@ class Rent(models.Model):
         else:
             # Действия, выполняемые при обновлении записи
             self.remove_related_tasks()
+            self.schedule_reminder_for_overdue_rent()
 
         self.set_delivery_flag()
         self.calculate_rental_price()
@@ -179,6 +180,14 @@ class Rent(models.Model):
             for task_id in self.task_ids:
                 app.control.revoke(task_id, terminate=True)
             self.task_ids = []
+
+    def schedule_reminder_for_overdue_rent(self):
+        """Запланировать напоминание об просроченной аренде"""
+        old_status = Rent.objects.get(pk=self.pk).status
+        new_status = self.status
+        if old_status != new_status and new_status in ["expired"]:
+            subject, message = msg.create_reminder_for_overdue_rent_message(self)
+            send_monthly_email_reminder.delay(subject, message, self.email)
 
     class Meta:
         verbose_name = "Аренда"
