@@ -104,8 +104,7 @@ class Rent(models.Model):
             self.schedule_rent_reminders()
         else:
             # Действия, выполняемые при обновлении записи
-            self.remove_related_tasks()
-            self.schedule_reminder_for_overdue_rent()
+            self.handle_status_changes()
 
         self.set_delivery_flag()
         self.calculate_rental_price()
@@ -160,22 +159,28 @@ class Rent(models.Model):
                 )
                 self.task_ids.append(task.id)
 
-    def remove_related_tasks(self):
-        """Удаляет связанные задачи, если аренда завершена или отменена"""
+    def handle_status_changes(self):
+        """Обрабатывает изменения статуса аренды"""
         old_status = Rent.objects.get(pk=self.pk).status
         new_status = self.status
-        if old_status != new_status and new_status in ["completed", "cancelled"]:
-            for task_id in self.task_ids:
-                app.control.revoke(task_id, terminate=True)
-            self.task_ids = []
+
+        # Если статус изменился
+        if old_status != new_status:
+            if new_status in ["completed", "cancelled"]:
+                self.remove_related_tasks()
+            elif new_status == "expired":
+                self.schedule_reminder_for_overdue_rent()
+
+    def remove_related_tasks(self):
+        """Удаляет связанные задачи, если аренда завершена или отменена"""
+        for task_id in self.task_ids:
+            app.control.revoke(task_id, terminate=True)
+        self.task_ids = []
 
     def schedule_reminder_for_overdue_rent(self):
         """Запланировать напоминание об просроченной аренде"""
-        old_status = Rent.objects.get(pk=self.pk).status
-        new_status = self.status
-        if old_status != new_status and new_status in ["expired"]:
-            subject, message = msg.create_reminder_for_overdue_rent_message(self)
-            send_monthly_email_reminder.delay(self.pk, subject, message)
+        subject, message = msg.create_reminder_for_overdue_rent_message(self)
+        send_monthly_email_reminder.delay(self.pk, subject, message)
 
     class Meta:
         verbose_name = "Аренда"
