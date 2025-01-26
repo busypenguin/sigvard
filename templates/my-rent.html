@@ -27,14 +27,14 @@
                         <div class="col-12 col-sm-5 d-flex flex-column align-items-center">
                             <img src="{% static 'img/image10.png' %}"
                                  class="rounded-pill mb-3" alt="">
-                            <h4>Екатерина Иванова</h4>
+                            <!--                            <h4>Екатерина Иванова</h4>-->
                         </div>
                         <div class="col-12 col-sm-7 d-flex flex-column">
                             <form>
                                 <label class="fs_24 SelfStorage_green ms-2" for="EMAIL">E-mail</label>
                                 <input type="email" name="EMAIL_EDIT" id="EMAIL"
                                        class="form-control fs_24 ps-2 SelfStorage__input"
-                                       value="ekatyusha89@yandex.ru" disabled>
+                                       value="{{ request.user.email }}" disabled>
                                 <label class="fs_24 SelfStorage_green ms-2" for="PHONE">Телефон</label>
                                 <input type="tel" name="PHONE_EDIT" id="PHONE"
                                        class="form-control fs_24 ps-2 SelfStorage__input"
@@ -75,40 +75,25 @@
                 </div>
                 <div class="tab-pane fade" id="Rent" role="tabpanel"
                      aria-labelledby="Rent-tab">
-                    <h1 class="fw-bold SelfStorage_green mb-5">Добрый день,
-                        Екатерина!</h1>
-                    <!--Если есть записи в бд-->
+                    <h1 class="fw-bold SelfStorage_green mb-5">Добрый день</h1>
+                    {% if grouped_rents %}
                     <a href="#" class="SelfStorage_orange">История аренды</a>
-                    <h4 class="SelfStorage_grey my-3">Срок Вашей аренды подходит к концу
-                        :(<br>Вы можете продлить аренду или забрать вещи до 28 июня 2022
-                        года включительно.</h4>
-                    <div class="mb-5">
-                        <h4 class="SelfStorage_green">Мой склад №1</h4>
-                        <h4>Одинцово, ул. Северная, д. 36</h4>
-                        <h4 class="SelfStorage_green">Мой бокс</h4>
-                        <h4>№2389-12</h4>
-                        <h4 class="SelfStorage_green">Срок аренды</h4>
-                        <h4>15.03.2022 - 28.06.2022</h4>
-                        <div>
-                            <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_green SelfStorage__btn2_green mb-3">
-                                Продлить аренду
-                            </button>
-                        </div>
-                        <div>
-                            <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_orange SelfStorage__btn2_orange mb-3">
-                                Открыть бокс
-                            </button>
-                        </div>
-                        <a href="#" class="SelfStorage_orange">Нужна помощь?</a>
-                    </div>
+                    {% for storage, rents in grouped_rents.items %}
 
                     <div class="mb-5">
-                        <h4 class="SelfStorage_green">Мой склад №2</h4>
-                        <h4>Люберцы, ул. Советская, д. 88</h4>
+                        <h2 class="SelfStorage_green">{{ storage }}</h2>
+                        {% for rent in rents %}
+                        {% if rent.is_near_end %}
+                        <h4 class="SelfStorage_grey my-3">
+                            Срок Вашей аренды подходит к концу :(<br>
+                            Вы можете продлить аренду или забрать вещи до {{ rent.end_date
+                            }}
+                            года включительно.</h4>
+                        {% endif %}
                         <h4 class="SelfStorage_green">Мой бокс</h4>
-                        <h4>№2335-10</h4>
+                        <h4>№{{ rent.box.number }}</h4>
                         <h4 class="SelfStorage_green">Срок аренды</h4>
-                        <h4>18.03.2022 - 21.09.2022</h4>
+                        <h4>{{ rent.start_date }} - {{ rent.end_date }}</h4>
                         <div>
                             <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_green SelfStorage__btn2_green mb-3">
                                 Продлить аренду
@@ -119,24 +104,30 @@
                                 Открыть бокс
                             </button>
                         </div>
-                        <a href="#" class="SelfStorage_orange">Нужна помощь?</a>
+                        <hr>
+                        {% endfor %}
+
                     </div>
+                    {% endfor %}
+                    {% else %}
+                    <!--Если нет записей в бд-->
+                    <h4 class="SelfStorage_grey my-5">У вас еще нет аренды :(<br>Но вы
+                        можете арендовать свой первый бокс по привлекательной цене прямо
+                        сейчас</h4>
+                    <div>
+                        <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_orange SelfStorage__btn2_orange mb-3">
+                            Арендовать бокс
+                        </button>
+                    </div>
+                    {% endif %}
+                    <a href="#" class="SelfStorage_orange">Нужна помощь?</a>
                 </div>
-                <!--Если нет записей в бд-->
-<!--                TODO: Добавить условия -->
-<!--                <h4 class="SelfStorage_grey my-5">У вас еще нет аренды :(<br>Но вы-->
-<!--                    можете арендовать свой первый бокс по привлекательной цене прямо-->
-<!--                    сейчас</h4>-->
-<!--                <div>-->
-<!--                    <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_orange SelfStorage__btn2_orange mb-3">-->
-<!--                        Арендовать бокс-->
-<!--                    </button>-->
-<!--                </div>-->
             </div>
         </div>
     </div>
 
-    <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+    <form id="logout-form" method="post" action="{% url 'logout' %}"
+          style="display: none;">
         {% csrf_token %}
     </form>
     <script>
