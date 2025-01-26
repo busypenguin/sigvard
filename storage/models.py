@@ -43,7 +43,7 @@ class Box(models.Model):
     length = models.FloatField(verbose_name="Длина, м.")
     area = models.DecimalField(
         max_digits=3, decimal_places=1, verbose_name="Площадь, м²", default=0
-        )
+    )
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Цена", default=0
     )
@@ -110,6 +110,7 @@ class Rent(models.Model):
         is_new = self.pk is None
         if is_new:
             # Действия, выполняемые при создании записи
+            super().save(*args, **kwargs)
             self.send_confirm_rent_message()
             self.set_rent_status_to_expired()
             self.schedule_rent_reminders()
@@ -152,7 +153,7 @@ class Rent(models.Model):
     def set_rent_status_to_expired(self):
         """Запланировать задачу изменить статус на 'просрочено' в конце срока аренды"""
         task = set_rent_status_to_expired_task.apply_async(
-            (self.pk),
+            (self.pk,),
             countdown=(self.end_date - now()).total_seconds(),
         )
         self.task_ids.append(task.id)
