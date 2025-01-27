@@ -1,0 +1,62 @@
+services:
+
+  django:
+    container_name: django
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: gunicorn sigvard.wsgi:application --bind 0.0.0.0:8080
+    env_file:
+      - .env
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: always
+    networks:
+      - default
+
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      - default
+
+  celery:
+    build: .
+    command: celery -A sigvard worker -l info
+    env_file:
+      - .env
+    volumes:
+      - ./:/usr/src/app/
+    depends_on:
+      - redis
+      - db
+    links:
+      - redis
+    networks:
+      - default
+    restart: always
+
+  db:
+    container_name: db
+    image: postgres:14.0-alpine
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    restart: always
+
+volumes:
+  static_volume:
+  postgres_data:
+
+networks:
+  default:
