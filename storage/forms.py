@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from phonenumber_field.modelfields import PhoneNumberField
 
 from .models import Rent, Box
 
@@ -24,6 +25,7 @@ class RentForm(forms.ModelForm):
             }
         ),
     )
+    phone = PhoneNumberField(region="RU")
     start_date = forms.DateField(
         widget=forms.DateInput(
             attrs={
@@ -65,7 +67,16 @@ class RentForm(forms.ModelForm):
 
     class Meta:
         model = Rent
-        fields = ["email", "start_date", "end_date", "pickup_address", "box"]
+        fields = ["email", "phone", "start_date", "end_date", "pickup_address", "box"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["phone"].widget.attrs.update(
+            {
+                "class": "form-control border-8 mb-4 py-3 px-5 border-0 fs_24 SelfStorage__bg_lightgrey",
+                "placeholder": "Введите номер телефона",
+            }
+        )
 
     def clean(self):
         """
