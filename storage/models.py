@@ -179,8 +179,11 @@ class Rent(models.Model):
         if old_status != new_status:
             if new_status in ["completed", "cancelled"]:
                 self.remove_related_tasks()
+                self.free_box()
             elif new_status == "expired":
                 self.schedule_reminder_for_overdue_rent()
+            elif new_status == "active":
+                self.occupy_box()
 
     def remove_related_tasks(self):
         """Удаляет связанные задачи, если аренда завершена или отменена"""
@@ -192,6 +195,14 @@ class Rent(models.Model):
         """Запланировать напоминание об просроченной аренде"""
         subject, message = msg.create_reminder_for_overdue_rent_message(self)
         send_monthly_email_reminder.delay(self.pk, subject, message)
+
+    def occupy_box(self):
+        self.box.is_occupied = True
+        self.box.save()
+
+    def free_box(self):
+        self.box.is_occupied = False
+        self.box.save()
 
     class Meta:
         verbose_name = "Аренда"
