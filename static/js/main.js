@@ -86,5 +86,14 @@ function createBoxElement(box) {
                 <span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От ${box.price} ₽</span>
             </div>
         `;
+
+    boxElement.addEventListener('click', (event) => {
+        event.preventDefault();
+        const boxField = document.querySelector('select[name="box"]');
+        boxField.value = box.id;
+        boxField.scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+
+
     return boxElement;
 }
