@@ -6,7 +6,11 @@ from django.utils.timezone import now
 
 import storage.messages as msg
 from sigvard.celery import app
-from .tasks import send_email_message_task
+from .tasks import (
+    send_email_message_task,
+    send_monthly_email_reminder,
+    set_rent_status_to_expired_task,
+)
 
 
 class Storage(models.Model):
@@ -39,9 +43,9 @@ class Box(models.Model):
     length = models.FloatField(verbose_name="Длина, м.")
     area = models.DecimalField(
         max_digits=3, decimal_places=1, verbose_name="Площадь, м²", default=0
-        )
+    )
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Цена", default=0
+        max_digits=10, decimal_places=2, verbose_name="Цена за месяц", default=0
     )
     is_occupied = models.BooleanField(verbose_name="Занята", default=False)
 
@@ -106,20 +110,13 @@ class Rent(models.Model):
         is_new = self.pk is None
         if is_new:
             # Действия, выполняемые при создании записи
+            super().save(*args, **kwargs)
             self.send_confirm_rent_message()
-
-            task_ids = []
-
-            end_rent_reminder_task_id = self.schedule_end_rent_reminders()
-            task_ids.append(end_rent_reminder_task_id)
-
-            rent_reminder_task_ids = self.schedule_rent_reminders()
-            task_ids.extend(rent_reminder_task_ids)
-
-            self.task_ids = task_ids
+            self.set_rent_status_to_expired()
+            self.schedule_rent_reminders()
         else:
             # Действия, выполняемые при обновлении записи
-            self.remove_related_tasks()
+            self.handle_status_changes()
 
         self.set_delivery_flag()
         self.calculate_rental_price()
@@ -137,7 +134,7 @@ class Rent(models.Model):
         """Рассчитывает стоимость аренды, если заданы даты"""
         if self.start_date and self.end_date:
             rental_days = (self.end_date - self.start_date).days + 1
-            daily_price = self.box.price
+            daily_price = self.box.price / 30
             self.total_price = rental_days * daily_price
 
     def link_user_by_email(self):
@@ -153,20 +150,17 @@ class Rent(models.Model):
         subject, message = msg.create_confirm_rent_message(self)
         send_email_message_task.delay(subject, message, self.email)
 
-    def schedule_end_rent_reminders(self):
-        """Запланировать задачу отправки письма в конце срока аренды"""
-        subject, message = msg.create_end_rent_message(self)
-        task = send_email_message_task.apply_async(
-            (subject, message, self.email),
+    def set_rent_status_to_expired(self):
+        """Запланировать задачу изменить статус на 'просрочено' в конце срока аренды"""
+        task = set_rent_status_to_expired_task.apply_async(
+            (self.pk,),
             countdown=(self.end_date - now()).total_seconds(),
         )
-
-        return task.id
+        self.task_ids.append(task.id)
 
     def schedule_rent_reminders(self) -> list:
         """Запланировать задачи для периодических напоминаний об окончании аренды."""
         delays = {30: "месяц", 14: "2 недели", 7: "неделю", 3: "3 дня"}
-        task_ids = []
         for delay, time_insert in delays.items():
             countdown = (self.end_date - timedelta(days=delay) - now()).total_seconds()
             if countdown > 0:
@@ -174,18 +168,41 @@ class Rent(models.Model):
                 task = send_email_message_task.apply_async(
                     (subject, message, self.email), countdown=countdown
                 )
-                task_ids.append(task.id)
+                self.task_ids.append(task.id)
 
-        return task_ids
+    def handle_status_changes(self):
+        """Обрабатывает изменения статуса аренды"""
+        old_status = Rent.objects.get(pk=self.pk).status
+        new_status = self.status
+
+        # Если статус изменился
+        if old_status != new_status:
+            if new_status in ["completed", "cancelled"]:
+                self.remove_related_tasks()
+                self.free_box()
+            elif new_status == "expired":
+                self.schedule_reminder_for_overdue_rent()
+            elif new_status == "active":
+                self.occupy_box()
 
     def remove_related_tasks(self):
         """Удаляет связанные задачи, если аренда завершена или отменена"""
-        old_status = Rent.objects.get(pk=self.pk).status
-        new_status = self.status
-        if old_status != new_status and new_status in ["completed", "cancelled"]:
-            for task_id in self.task_ids:
-                app.control.revoke(task_id, terminate=True)
-            self.task_ids = []
+        for task_id in self.task_ids:
+            app.control.revoke(task_id, terminate=True)
+        self.task_ids = []
+
+    def schedule_reminder_for_overdue_rent(self):
+        """Запланировать напоминание об просроченной аренде"""
+        subject, message = msg.create_reminder_for_overdue_rent_message(self)
+        send_monthly_email_reminder.delay(self.pk, subject, message)
+
+    def occupy_box(self):
+        self.box.is_occupied = True
+        self.box.save()
+
+    def free_box(self):
+        self.box.is_occupied = False
+        self.box.save()
 
     class Meta:
         verbose_name = "Аренда"

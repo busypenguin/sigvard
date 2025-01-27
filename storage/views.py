@@ -1,9 +1,14 @@
+from collections import defaultdict
+from datetime import timedelta
+
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Min, Max, Count, Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView
 
 from .forms import UserRegisterForm, UserLoginForm, RentForm
@@ -99,53 +104,57 @@ def boxes(request: HttpRequest) -> HttpResponse:
     else:
         rent_form = RentForm()
 
-    boxes_to3 = []
-    boxes_to10 = []
-    boxes_from10 = []
     storages = Storage.objects.all()
-    boxes = Box.objects.all()
-    for box in boxes:
-        if box.area < 3:
-            boxes_to3.append(box)
-        elif box.area < 10:
-            boxes_to10.append(box)
-        elif box.area > 10:
-            boxes_from10.append(box)
+    for storage in storages:
+        storage.total_boxes = storage.boxes.count()
+        storage.occupied_boxes = (
+            storage.boxes.filter(rents__status="active").distinct().count()
+        )
+        storage.available_boxes = storage.total_boxes - storage.occupied_boxes
+        storage.min_price = storage.boxes.aggregate(Min("price"))["price__min"]
+        storage.max_height = storage.boxes.aggregate(Max("height"))["height__max"]
 
     context = {
         "storages": storages,
         "rent_form": rent_form,
-        "boxes": boxes,
-        "boxes_to3": boxes_to3,
-        "boxes_to10": boxes_to10,
-        "boxes_from10": boxes_from10
-        }
+    }
     return render(request, "boxes.html", context)
 
 
 def get_boxes(request: HttpRequest, storage_id: int) -> JsonResponse:
-    storage = Storage.objects.get(id=storage_id)
-    boxes = Box.objects.filter(storage=storage)
-    json_boxes = []
-    for box in boxes:
-        json_boxes.append(
-            {
-                "number": box.number,
-                "level": box.level,
-                "height": box.height,
-                "width": box.width,
-                "length": box.length,
-                "area": box.area,
-                "price": box.price,
-                "is_occupied": box.is_occupied
-            }
-        )
-    return JsonResponse({"boxes": json_boxes})
+    free_boxes = Box.objects.filter(storage_id=storage_id, is_occupied=False)
+    box_data = [
+        {
+            "id": box.id,
+            "number": box.number,
+            "area": box.area,
+            "price": box.price,
+            "level": box.level,
+            "length": box.length,
+            "width": box.width,
+            "height": box.height,
+        }
+        for box in free_boxes
+    ]
+
+    return JsonResponse({"boxes": box_data}, safe=False)
 
 
 def faq(request: HttpRequest) -> HttpResponse:
     return render(request, "faq.html")
 
 
-def my_rent(request: HttpRequest) -> HttpResponse:
-    return render(request, "my-rent.html")
+def my_rent(request: HttpRequest, user_id: int) -> HttpResponse:
+    user = get_object_or_404(User, pk=user_id)
+    rents = user.rents.select_related("box", "box__storage").all()
+
+    # Группируем аренды по складам
+    grouped_rents = defaultdict(list)
+    for rent in rents:
+        storage = rent.box.storage
+        rent.is_near_end = (rent.end_date - timezone.now()) <= timedelta(days=7)
+        grouped_rents[storage].append(rent)
+
+    context = {"grouped_rents": dict(grouped_rents), "user": user}
+
+    return render(request, "my-rent.html", context)

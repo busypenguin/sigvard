@@ -2,7 +2,6 @@ celery==5.4.0
 dj-database-url==2.3.0
 Django==5.1.5
 django-debug-toolbar==4.4.6
-django-celery-beat==2.7.0
 environs==11.2.1
 psycopg2-binary==2.9.10
 pillow==11.1.0
