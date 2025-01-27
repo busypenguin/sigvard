@@ -6,7 +6,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Min, Max, Count, Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView
@@ -123,14 +123,46 @@ def boxes(request: HttpRequest) -> HttpResponse:
         "boxes": boxes,
         "boxes_to3": boxes_to3,
         "boxes_to10": boxes_to10,
-        "boxes_from10": boxes_from10
-        }
+        "boxes_from10": boxes_from10,
+    }
     return render(request, "boxes.html", context)
+
+
+def get_boxes(request: HttpRequest, storage_id: int) -> JsonResponse:
+    storage = Storage.objects.get(id=storage_id)
+    boxes = Box.objects.filter(storage=storage)
+    json_boxes = []
+    for box in boxes:
+        json_boxes.append(
+            {
+                "number": box.number,
+                "level": box.level,
+                "height": box.height,
+                "width": box.width,
+                "length": box.length,
+                "area": box.area,
+                "price": box.price,
+                "is_occupied": box.is_occupied,
+            }
+        )
+    return JsonResponse({"boxes": json_boxes})
 
 
 def faq(request: HttpRequest) -> HttpResponse:
     return render(request, "faq.html")
 
 
-def my_rent(request: HttpRequest) -> HttpResponse:
-    return render(request, "my-rent.html")
+def my_rent(request: HttpRequest, user_id: int) -> HttpResponse:
+    user = get_object_or_404(User, pk=user_id)
+    rents = user.rents.select_related("box", "box__storage").all()
+
+    # Группируем аренды по складам
+    grouped_rents = defaultdict(list)
+    for rent in rents:
+        storage = rent.box.storage
+        rent.is_near_end = (rent.end_date - timezone.now()) <= timedelta(days=7)
+        grouped_rents[storage].append(rent)
+
+    context = {"grouped_rents": dict(grouped_rents), "user": user}
+
+    return render(request, "my-rent.html", context)
