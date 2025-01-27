@@ -104,26 +104,19 @@ def boxes(request: HttpRequest) -> HttpResponse:
     else:
         rent_form = RentForm()
 
-    boxes_to3 = []
-    boxes_to10 = []
-    boxes_from10 = []
     storages = Storage.objects.all()
-    boxes = Box.objects.all()
-    for box in boxes:
-        if box.area < 3:
-            boxes_to3.append(box)
-        elif box.area < 10:
-            boxes_to10.append(box)
-        elif box.area > 10:
-            boxes_from10.append(box)
+    for storage in storages:
+        storage.total_boxes = storage.boxes.count()
+        storage.occupied_boxes = (
+            storage.boxes.filter(rents__status="active").distinct().count()
+        )
+        storage.available_boxes = storage.total_boxes - storage.occupied_boxes
+        storage.min_price = storage.boxes.aggregate(Min("price"))["price__min"]
+        storage.max_height = storage.boxes.aggregate(Max("height"))["height__max"]
 
     context = {
         "storages": storages,
         "rent_form": rent_form,
-        "boxes": boxes,
-        "boxes_to3": boxes_to3,
-        "boxes_to10": boxes_to10,
-        "boxes_from10": boxes_from10,
     }
     return render(request, "boxes.html", context)
 
