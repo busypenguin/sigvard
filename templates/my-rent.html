@@ -99,9 +99,21 @@
                             </button>
                         </div>
                         <div>
-                            <button class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_orange SelfStorage__btn2_orange mb-3">
+                            <button id="openBoxButton" class="btn fs_24 px-5 py-3 text-white border-8 SelfStorage__bg_orange SelfStorage__btn2_orange mb-3">
                                 Открыть бокс
                             </button>
+
+                            <!-- Скрытый блок с информацией и картинкой -->
+                            <div id="infoBlock" style="display: none;">
+                                <img src="{% static 'img/qrcode.png' %}" width="290" height="290"  alt="">
+                            </div>
+
+                            <!-- JavaScript для отображения скрытого блока -->
+                            <script>
+                                document.getElementById('openBoxButton').addEventListener('click', function() {
+                                    document.getElementById('infoBlock').style.display = 'block';
+                                });
+                            </script>
                         </div>
                         <hr>
                         {% endfor %}

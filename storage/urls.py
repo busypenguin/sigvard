@@ -12,4 +12,5 @@ urlpatterns = [
     path("login/", views.UserLoginView.as_view(), name="login"),
     path("logout/", views.UserLogoutView.as_view(), name="logout"),
     path("get_boxes/<int:storage_id>/", views.get_boxes, name="get_boxes"),
+    path("approval/", views.show_approval, name="approval"),
 ]
