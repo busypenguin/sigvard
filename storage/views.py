@@ -162,3 +162,7 @@ def my_rent(request: HttpRequest, user_id: int) -> HttpResponse:
     context = {"grouped_rents": dict(grouped_rents), "user": user}
 
     return render(request, "my-rent.html", context)
+
+
+def show_approval(request: HttpRequest) -> HttpResponse:
+    return render(request, "approval.html")
