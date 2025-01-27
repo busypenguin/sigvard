@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
+from phonenumber_field.modelfields import PhoneNumberField
 
 import storage.messages as msg
 from sigvard.celery import app
@@ -78,6 +79,7 @@ class Rent(models.Model):
         blank=True,
     )
     email = models.EmailField(verbose_name="Email клиента", null=True, blank=True)
+    phone = PhoneNumberField("Номер телефона", region="RU", blank=True)
     box = models.ForeignKey(
         Box,
         on_delete=models.PROTECT,
@@ -98,7 +100,9 @@ class Rent(models.Model):
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Общая сумма аренды", default=0
     )
-    is_delivery_needed = models.BooleanField(verbose_name="Нужна доставка")
+    is_delivery_needed = models.BooleanField(
+        verbose_name="Нужна доставка", default=False
+    )
     is_partial_pickup_allowed = models.BooleanField(
         default=False, verbose_name="Можно забирать частично"
     )
