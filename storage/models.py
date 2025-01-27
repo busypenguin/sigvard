@@ -45,7 +45,7 @@ class Box(models.Model):
         max_digits=3, decimal_places=1, verbose_name="Площадь, м²", default=0
     )
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name="Цена", default=0
+        max_digits=10, decimal_places=2, verbose_name="Цена за месяц", default=0
     )
     is_occupied = models.BooleanField(verbose_name="Занята", default=False)
 
@@ -134,7 +134,7 @@ class Rent(models.Model):
         """Рассчитывает стоимость аренды, если заданы даты"""
         if self.start_date and self.end_date:
             rental_days = (self.end_date - self.start_date).days + 1
-            daily_price = self.box.price
+            daily_price = self.box.price / 30
             self.total_price = rental_days * daily_price
 
     def link_user_by_email(self):
