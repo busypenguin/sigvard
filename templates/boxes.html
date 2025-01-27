@@ -53,11 +53,14 @@
             {% endfor %}
         </ul>
         <script>
-            {% for storage in storages %}
-                document.getElementById('pills-storage-{{ storage.id }}-tab').addEventListener('click', () => {
-                document.getElementById('toBox').click()
-            })
-            {% endfor %}
+            $(document).ready(function() {
+                {% for storage in storages %}
+                    document.getElementById('pills-storage-{{ storage.id }}-tab').addEventListener('click', () => {
+                        document.getElementById('toBox').click();
+                        loadBoxes({{ storage.id }});
+                });
+                {% endfor %}
+            });
         </script>
     </article>
     <article class="pt-header" id="BOX">
@@ -218,231 +221,16 @@
         </ul>
 		<div class="tab-content" id="pills-tabContent">
 			<div class="tab-pane fade show active" id="pills-all" role="tabpanel" aria-labelledby="pills-home-tab">
-                <a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes.0.level}} эт.</span><span class="fs_24">№{{boxes.0.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes.0.area }} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{ boxes.0.width}} х {{ boxes.0.length}} х {{ boxes.0.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{boxes.0.price}} ₽</span>
-					</div>
-				</a>
-                {% if boxes.1 %}
-				<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes.1.level}} эт.</span><span class="fs_24">№{{boxes.1.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes.1.area }} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{ boxes.1.width}} х {{ boxes.1.length}} х {{ boxes.1.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{boxes.1.price}} ₽</span>
-					</div>
-				</a>
-                {% endif %}
-				<div class="collapse" id="collapse-all">
-                    {%for box in boxes%}
-					<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-						<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="SelfStorage_green fs_24 me-2">{{box.level}} эт.</span><span class="fs_24">№{{box.number}}</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{box.area}} м²</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{ box.width}} х {{ box.length}} х {{ box.height}} м²</span>
-						</div>
-						<div class="col-12 col-lg-3">
-							<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{box.price}} ₽</span>
-						</div>
-					</a>
-                    {%endfor%}
-				</div>
-				<div class="d-flex justify-content-center mt-5">
-					<button class="btn w-auto py-3 px-5 SelfStorage__bg_orange SelfStorage__btn2_orange text-white text-center fs_24 border-8" id="btn-collapse-all" data-bs-toggle="collapse" data-bs-target="#collapse-all" aria-expanded="false" aria-controls="collapse-all">Другие боксы</button>
-					<script>
-						document.getElementById('btn-collapse-all').addEventListener('click', () => document.getElementById('btn-collapse-all').classList.add('d-none'))
-					</script>
-				</div>
+				<!--Все боксы-->
 			</div>
 			<div class="tab-pane fade" id="pills-to3" role="tabpanel" aria-labelledby="pills-profile-tab">
-				{% comment %} boxes_to3 {% endcomment %}
-                <a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_to3.0.level}} эт.</span><span class="fs_24">№{{boxes_to3.0.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to3.0.area}} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to3.0.width}} х {{boxes_to3.0.length}} х {{boxes_to3.0.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От  {{boxes_to3.0.price}} ₽</span>
-					</div>
-				</a>
-                {% if boxes_to3.1 %}
-				<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_to3.1.level}} эт.</span><span class="fs_24">№{{boxes_to3.1.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to3.1.area }} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{ boxes_to3.1.width}} х {{ boxes_to3.1.length}} х {{ boxes_to3.1.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{boxes_to3.1.price}} ₽</span>
-					</div>
-				</a>
-                {% endif %}
-                <div class="collapse" id="collapse-to3">
-                    {%for box in boxes_to3%}
-					<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-						<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="SelfStorage_green fs_24 me-2">{{box.level}} эт.</span><span class="fs_24">№{{box.number}}</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{box.area}} м²</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{ box.width}} х {{ box.length}} х {{ box.height}} м²</span>
-						</div>
-						<div class="col-12 col-lg-3">
-							<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{box.price}} ₽</span>
-						</div>
-					</a>
-                    {%endfor%}
-				</div>
-				<div class="d-flex justify-content-center mt-5">
-					<button class="btn w-auto py-3 px-5 SelfStorage__bg_orange SelfStorage__btn2_orange text-white text-center fs_24 border-8" id="btn-collapse-to" data-bs-toggle="collapse" data-bs-target="#collapse-to3" aria-expanded="false" aria-controls="collapse-to3">Другие боксы</button>
-					<script>
-						document.getElementById('btn-collapse-to3').addEventListener('click', () => document.getElementById('btn-collapse-to3').classList.add('d-none'))
-					</script>
-				</div>
+				<!--Боксы до 3 м2-->
 			</div>
 			<div class="tab-pane fade" id="pills-to10" role="tabpanel" aria-labelledby="pills-contact-tab">
-				{% comment %} boxes_to10 {% endcomment %}
-                <a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_to10.0.level}} эт.</span><span class="fs_24">№{{boxes_to10.0.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to10.0.area}} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to10.0.width}} х {{boxes_to10.0.length}} х {{boxes_to10.0.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От  {{boxes_to10.0.price}} ₽</span>
-					</div>
-				</a>
-                {% if boxes_to10.1 %}
-				<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_to10.1.level}} эт.</span><span class="fs_24">№{{boxes_to10.1.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_to10.1.area }} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{ boxes_to10.1.width}} х {{ boxes_to10.1.length}} х {{ boxes_to10.1.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{boxes_to10.1.price}} ₽</span>
-					</div>
-				</a>
-                {% endif %}
-				<div class="collapse" id="collapse-to10">
-                    {%for box in boxes_to10%}
-					<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-						<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="SelfStorage_green fs_24 me-2">{{box.level}} эт.</span><span class="fs_24">№{{box.number}}</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{box.area}} м²</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{ box.width}} х {{ box.length}} х {{ box.height}} м²</span>
-						</div>
-						<div class="col-12 col-lg-3">
-							<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{box.price}} ₽</span>
-						</div>
-					</a>
-                    {%endfor%}
-				</div>
-				<div class="d-flex justify-content-center mt-5">
-					<button class="btn w-auto py-3 px-5 SelfStorage__bg_orange SelfStorage__btn2_orange text-white text-center fs_24 border-8" id="btn-collapse-to10" data-bs-toggle="collapse" data-bs-target="#collapse-to10" aria-expanded="false" aria-controls="collapse-to10">Другие боксы</button>
-					<script>
-						document.getElementById('btn-collapse-to10').addEventListener('click', () => document.getElementById('btn-collapse-to10').classList.add('d-none'))
-					</script>
-				</div>
+				<!--Боксы от 3 до 10 м2-->
 			</div>
 			<div class="tab-pane fade" id="pills-from10" role="tabpanel" aria-labelledby="pills-contact-tab">
-				{% comment %} boxes_from10 {% endcomment %}
-                <a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_from10.0.level}} эт.</span><span class="fs_24">№{{boxes_from10.0.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_from10.0.area}} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_from10.0.width}} х {{boxes_from10.0.length}} х {{boxes_from10.0.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От  {{boxes_from10.0.price}} ₽</span>
-					</div>
-				</a>
-                {% if boxes_from10.1 %}
-				<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-					<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="SelfStorage_green fs_24 me-2">{{boxes_from10.1.level}} эт.</span><span class="fs_24">№{{boxes_from10.1.number}}</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{boxes_from10.1.area }} м²</span>
-					</div>
-					<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-						<span class="fs_24">{{ boxes_from10.1.width}} х {{ boxes_from10.1.length}} х {{ boxes_from10.1.height}} м²</span>
-					</div>
-					<div class="col-12 col-lg-3">
-						<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{boxes_from10.1.price}} ₽</span>
-					</div>
-				</a>
-                {% endif %}
-				<div class="collapse" id="collapse-from10">
-                    {%for box in boxes_from10%}
-					<a href="#" class="row text-decoration-none py-3 px-4 mt-5 SelfStorage__boxlink">
-						<div class="col-12 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="SelfStorage_green fs_24 me-2">{{box.level}} эт.</span><span class="fs_24">№{{box.number}}</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{box.area}} м²</span>
-						</div>
-						<div class="col-6 col-md-4 col-lg-3 d-flex justify-content-center align-items-center">
-							<span class="fs_24">{{ box.width}} х {{ box.length}} х {{ box.height}} м²</span>
-						</div>
-						<div class="col-12 col-lg-3">
-							<span class="btn my-2 w-100 text-white fs_24 SelfStorage__bg_orange SelfStorage__btn2_orange border-8">От {{box.price}} ₽</span>
-						</div>
-					</a>
-                    {%endfor%}
-				</div>
-				<div class="d-flex justify-content-center mt-5">
-					<button class="btn w-auto py-3 px-5 SelfStorage__bg_orange SelfStorage__btn2_orange text-white text-center fs_24 border-8" id="btn-collapse-from10" data-bs-toggle="collapse" data-bs-target="#collapse-from10" aria-expanded="false" aria-controls="collapse-from10">Другие боксы</button>
-					<script>
-						document.getElementById('btn-collapse-from10').addEventListener('click', ( => document.getElementById('btn-collapse-from10').classList.add('d-none'))
-					</script>
-				</div>
+				<!--Боксы более 10 м2-->
 			</div>
 		</div>
 	</article>

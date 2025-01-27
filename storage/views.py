@@ -122,23 +122,22 @@ def boxes(request: HttpRequest) -> HttpResponse:
 
 
 def get_boxes(request: HttpRequest, storage_id: int) -> JsonResponse:
-    storage = Storage.objects.get(id=storage_id)
-    boxes = Box.objects.filter(storage=storage)
-    json_boxes = []
-    for box in boxes:
-        json_boxes.append(
-            {
-                "number": box.number,
-                "level": box.level,
-                "height": box.height,
-                "width": box.width,
-                "length": box.length,
-                "area": box.area,
-                "price": box.price,
-                "is_occupied": box.is_occupied,
-            }
-        )
-    return JsonResponse({"boxes": json_boxes})
+    free_boxes = Box.objects.filter(storage_id=storage_id, is_occupied=False)
+    box_data = [
+        {
+            "id": box.id,
+            "number": box.number,
+            "area": box.area,
+            "price": box.price,
+            "level": box.level,
+            "length": box.length,
+            "width": box.width,
+            "height": box.height,
+        }
+        for box in free_boxes
+    ]
+
+    return JsonResponse({"boxes": box_data}, safe=False)
 
 
 def faq(request: HttpRequest) -> HttpResponse:
