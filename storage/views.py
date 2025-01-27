@@ -100,7 +100,7 @@ def boxes(request: HttpRequest) -> HttpResponse:
         if rent_form.is_valid():
             rent_form.save()
 
-            return redirect("my_rent")
+            return redirect("success_rent")
     else:
         rent_form = RentForm()
 
@@ -142,6 +142,10 @@ def get_boxes(request: HttpRequest, storage_id: int) -> JsonResponse:
 
 def faq(request: HttpRequest) -> HttpResponse:
     return render(request, "faq.html")
+
+
+def success_rent(request: HttpRequest) -> HttpResponse:
+    return render(request, "success_rent.html")
 
 
 def my_rent(request: HttpRequest, user_id: int) -> HttpResponse:
